@@ -1,0 +1,11 @@
+{
+	"id": "zettelbloom",
+	"name": "Zettelbloom",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Gather links from raindrop, create dedicated pages for resources, and optimize link handling within your notes",
+	"author": "Ryan Legler",
+	"authorUrl": "",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}
