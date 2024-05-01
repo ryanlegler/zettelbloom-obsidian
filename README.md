@@ -1,8 +1,12 @@
 # ZettelBloom-Obsidian Plugin
 
+# WORK IN PROGRESS - PROBABLY DON'T USE THIS YET
+
 ## Introduction
 
 The ZettelBloom-Obsidian plugin is designed to assist in the execution of the ZettelBloom principles of gathering, reconciling, and optimizing note-taking and knowledge management within the Obsidian platform. It provides functionalities to process links, create dedicated pages for resources, and optimize link handling within your notes.
+
+-   [ ] Add some links to the ZettelBloom principles
 
 ## Features
 

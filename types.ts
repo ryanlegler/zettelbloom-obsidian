@@ -2,12 +2,14 @@ export type ZettelBloomSettings = {
 	mySetting: string;
 	autoSyncInterval: string; // minutes
 	syncEnabled: boolean;
-	token: string;
-	collectionID: string;
+	raindropToken: string;
+	raindropCollectionID: string;
+	raindropBackSync: boolean;
 	resourceFolderPath: string;
 	resourceInboxFilePath: string;
 	devTopicFolderPath: string;
 	devTopicUpLinkPath: string;
+	duplicatePrevention: boolean;
 };
 
 export type RainDropMeta = {

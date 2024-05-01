@@ -40,33 +40,41 @@ export async function createInPlace({
 		new Notice(`🚨 File Already Exists: "${newFileName}"`);
 		return;
 	} else {
-		// save it to Raindrop
-		const raindrop = await saveToRaindrop({
-			url,
-			collectionID: settings.collectionID,
-			token: settings.token,
-		});
+		if (!settings.raindropToken || !settings.raindropCollectionID) {
+			new Notice(`MISSING CONFIG`);
+			return;
+		}
 
-		const metadataMapped: Partial<RainDropMeta> = {
-			link: url,
-			title,
-			cover: metadata?.banner,
-			excerpt: metadata?.description,
-			created: new Date().toISOString(),
-			lastUpdate: new Date().toISOString(),
-			tags: "",
-			collectionId: parseInt(settings.collectionID, 10),
-			_id: raindrop?._id,
-		};
+		if (settings.raindropBackSync) {
+			// save it to Raindrop
+			const raindrop = await saveToRaindrop({
+				url,
+				collectionID: settings.raindropCollectionID,
+				token: settings.raindropToken,
+			});
 
-		// Adds it to turso Mirror if it doesn't exist
-		await fetch(`${BASE_RAINDROP_MIRROR_URL}/raindrop`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(metadataMapped),
-		});
+			if (settings.duplicatePrevention) {
+				const metadataMapped: Partial<RainDropMeta> = {
+					link: url,
+					title,
+					cover: metadata?.banner,
+					excerpt: metadata?.description,
+					created: new Date().toISOString(),
+					lastUpdate: new Date().toISOString(),
+					tags: "",
+					collectionId: parseInt(settings.raindropCollectionID, 10),
+					_id: raindrop?._id,
+				};
+				// Adds it to turso Mirror if it doesn't exist
+				await fetch(`${BASE_RAINDROP_MIRROR_URL}/raindrop`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(metadataMapped),
+				});
+			}
+		}
 
 		// creates the new file
 		const content = getRichLinkTemplate({

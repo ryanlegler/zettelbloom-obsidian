@@ -9,8 +9,10 @@ import {
 	Setting,
 } from "obsidian";
 import { ZettelBloomSettings } from "types";
-import { createInPlace } from "src/utils/createInPlace";
+
 import { sync } from "src/utils/sync";
+
+import "styles.css";
 
 export default class ZettelBloom extends Plugin {
 	settings: ZettelBloomSettings;
@@ -82,8 +84,8 @@ export default class ZettelBloom extends Plugin {
 
 		if (
 			!this.settings.resourceFolderPath ||
-			!this.settings.token ||
-			!this.settings.collectionID
+			!this.settings.raindropToken ||
+			!this.settings.raindropCollectionID
 		) {
 			new Notice(`MISSING CONFIG`);
 			return;
@@ -190,9 +192,9 @@ class SettingTab extends PluginSettingTab {
 			.addText((text) =>
 				text
 					.setPlaceholder("Add API Key here")
-					.setValue(this.plugin.settings.token)
+					.setValue(this.plugin.settings.raindropToken)
 					.onChange(async (value) => {
-						this.plugin.settings.token = value;
+						this.plugin.settings.raindropToken = value;
 						await this.plugin.saveSettings();
 					})
 			);
@@ -204,9 +206,9 @@ class SettingTab extends PluginSettingTab {
 			.addText((text) =>
 				text
 					.setPlaceholder("Raindrop Collection ID")
-					.setValue(this.plugin.settings.collectionID)
+					.setValue(this.plugin.settings.raindropCollectionID)
 					.onChange(async (value) => {
-						this.plugin.settings.collectionID = value;
+						this.plugin.settings.raindropCollectionID = value;
 						await this.plugin.saveSettings();
 					})
 			);
@@ -283,6 +285,33 @@ class SettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.autoSyncInterval)
 					.onChange(async (value) => {
 						this.plugin.settings.autoSyncInterval = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Back Sync Enabled")
+			.setDesc(
+				"When the Manual (In Place) Link Expansion, this will also sync the bookmark up to Raindrop.io"
+			)
+			.addToggle((enabled) =>
+				enabled
+					.setValue(this.plugin.settings.raindropBackSync)
+					.onChange(async (value) => {
+						this.plugin.settings.raindropBackSync = value;
+						await this.plugin.saveSettings();
+					})
+			);
+		new Setting(containerEl)
+			.setName("Duplicate Prevention")
+			.setDesc(
+				"Prevents duplicate link resources from being created when iCloud Sync is lagging behind raindrop syncing, This is achieved by checking against an additional external data store. Metadata from the bookmark, and the collectionID is stored externally. See further details in the readme"
+			)
+			.addToggle((enabled) =>
+				enabled
+					.setValue(this.plugin.settings.duplicatePrevention)
+					.onChange(async (value) => {
+						this.plugin.settings.duplicatePrevention = value;
 						await this.plugin.saveSettings();
 					})
 			);

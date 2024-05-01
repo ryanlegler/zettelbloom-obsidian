@@ -7,10 +7,11 @@ export const DEFAULT_SETTINGS: ZettelBloomSettings = {
 	mySetting: "default",
 	autoSyncInterval: "5",
 	syncEnabled: true,
-	token: "",
-	collectionID: "",
+	raindropToken: "",
+	raindropCollectionID: "",
 	resourceFolderPath: "",
 	devTopicFolderPath: "",
 	resourceInboxFilePath: "",
 	devTopicUpLinkPath: "",
+	raindropBackSync: true,
 };

@@ -18,11 +18,11 @@ export async function sync({
 }) {
 	// fetches the raindrop items
 	const result = await window.fetch(
-		`${BASE_RAINDROP_URL}/raindrops/${settings.collectionID}`,
+		`${BASE_RAINDROP_URL}/raindrops/${settings.raindropCollectionID}`,
 		{
 			method: "GET",
 			headers: {
-				Authorization: `Bearer ${settings.token}`,
+				Authorization: `Bearer ${settings.raindropToken}`,
 				"Content-Type": "application/json",
 			},
 		}
