@@ -10,9 +10,23 @@ const watcher = chokidar.watch("main.js", {
 });
 
 watcher.on("change", (path) => {
-	fs.copy(path, localPath)
+	fs.copy(path, `${localPath}/main.js`)
 		.then(() =>
-			console.log(`File ${path} has been copied to destination directory`)
+			console.log(`JS ${path} has been copied to destination directory`)
+		)
+		.catch((error) => console.error(`Error copying file: ${error}`));
+});
+
+const watcherCss = chokidar.watch("styles.css", {
+	persistent: true,
+});
+
+watcherCss.on("change", (path) => {
+	fs.copy(path, `${localPath}/styles.css`)
+		.then(() =>
+			console.log(
+				`CSS File ${path} has been copied to destination directory`
+			)
 		)
 		.catch((error) => console.error(`Error copying file: ${error}`));
 });
