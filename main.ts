@@ -8,11 +8,14 @@ import {
 	PluginSettingTab,
 	Setting,
 } from "obsidian";
-import { ZettelBloomSettings } from "types";
+import { MetaData, ZettelBloomSettings } from "types";
 
 import { sync } from "src/utils/sync";
 
 import "styles.css";
+import { extractUrlFromMarkdown } from "src/utils/extractUrlFromMarkdown";
+import { getMetaData } from "src/utils/getMetaData";
+import { checkIfFileExists } from "src/utils/checkifFileExists";
 
 export default class ZettelBloom extends Plugin {
 	settings: ZettelBloomSettings;
@@ -44,8 +47,34 @@ export default class ZettelBloom extends Plugin {
 		this.addCommand({
 			id: "sync-raindrop-io",
 			name: "Sync Raindrop.io",
-			callback: () =>
-				new ChooseTopicModal(this.app, this.settings).open(),
+			callback: async () => {
+				const selection =
+					app.workspace.activeEditor?.editor?.getSelection();
+				const url = extractUrlFromMarkdown(selection);
+				const metadata: MetaData["metadata"] = await getMetaData(url);
+
+				const { fileExists, newFileName } = checkIfFileExists({
+					settings: this.settings,
+					title: metadata.title,
+					website: metadata.website,
+					app: this.app,
+				});
+				if (fileExists) {
+					new Notice(`🚨 File Already Exists: "${metadata.title}"`);
+					// put the link in the current selection in the editor
+					app.workspace.activeEditor?.editor?.replaceSelection(
+						`![[${newFileName}]]`
+					);
+
+					return;
+				} else {
+					new ChooseTopicModal(
+						this.app,
+						this.settings,
+						metadata
+					).open();
+				}
+			},
 			hotkeys: [
 				{
 					modifiers: ["Meta", "Shift"],

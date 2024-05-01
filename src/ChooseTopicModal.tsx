@@ -1,5 +1,5 @@
 import { App, Modal } from "obsidian";
-import { ZettelBloomSettings } from "types";
+import { MetaData, ZettelBloomSettings } from "types";
 import { createInPlace } from "src/utils/createInPlace";
 import { Root, createRoot } from "react-dom/client";
 import { StrictMode } from "react";
@@ -9,19 +9,25 @@ export class ChooseTopicModal extends Modal {
 	selectedOptions: Set<any>;
 	settings: ZettelBloomSettings;
 	root: Root | null = null;
+	metadata: MetaData["metadata"];
 
-	constructor(app: App, settings: ZettelBloomSettings) {
+	constructor(
+		app: App,
+		settings: ZettelBloomSettings,
+		metadata: MetaData["metadata"]
+	) {
 		super(app);
 		this.settings = settings;
 		this.selectedOptions = new Set(); // stores the selected options
+		this.metadata = metadata;
 	}
 
 	onConfirm = (tags: string[]) => {
-		console.log("🚀 TAGS:", tags);
 		createInPlace({
 			settings: this.settings,
 			app: this.app,
 			tags,
+			metadata: this.metadata,
 		});
 
 		const { contentEl } = this;
@@ -30,6 +36,7 @@ export class ChooseTopicModal extends Modal {
 	};
 
 	async onOpen() {
+		//
 		let { contentEl } = this;
 		// const wrapper = contentEl.createDiv();
 

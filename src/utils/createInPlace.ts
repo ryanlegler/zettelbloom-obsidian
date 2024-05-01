@@ -1,43 +1,44 @@
 import { App, Notice, TFile } from "obsidian";
 import { MetaData, RainDropMeta, ZettelBloomSettings } from "types";
 import { getRichLinkTemplate } from "./getRichLinkTemplate";
-import { sanitizeFileName } from "./sanitizeFileName";
-import { sanitizeUrl } from "./sanitizeUrl";
 import { handleTopicTagPages } from "./handleTopicTagPages";
 import { extractUrlFromMarkdown } from "./extractUrlFromMarkdown";
-import { getMetaData } from "./getMetaData";
 import { saveToRaindrop } from "./saveToRaindrop";
 import { BASE_RAINDROP_MIRROR_URL } from "../constants";
+import { checkIfFileExists } from "./checkifFileExists";
 
 export async function createInPlace({
 	settings,
 	app,
 	tags = [],
+	metadata,
 }: {
 	settings: ZettelBloomSettings;
 	app: App;
 	tags: string[];
+	metadata: MetaData["metadata"];
 }) {
 	const selection = app.workspace.activeEditor?.editor?.getSelection();
-
 	const url = extractUrlFromMarkdown(selection);
-	const metadata: MetaData["metadata"] = await getMetaData(url);
 
 	const { title, website } = metadata || {};
 
-	// the new file name
-	let newFileName = `🔗 ${sanitizeFileName(title) || sanitizeUrl(website)}`;
+	const { fileExists, newFileName, filePath } = checkIfFileExists({
+		settings: this.settings,
+		title: title,
+		website: website,
+		app: this.app,
+	});
 
-	const { resourceFolderPath } = settings;
-
-	// the file path - includes the folder path and the file name and extension
-	const filePath = `${resourceFolderPath}/${newFileName}.md`;
-
-	// check if the file already exists
-	const fileExists = app.vault.getAbstractFileByPath(filePath);
-
+	// this should now never happen because we are checking if the file exists before calling this function.
+	// just incase we missed something, we will check again
 	if (fileExists) {
 		new Notice(`🚨 File Already Exists: "${newFileName}"`);
+		// put the link in the current selection in the editor
+		app.workspace.activeEditor?.editor?.replaceSelection(
+			`![[${newFileName}]]`
+		);
+
 		return;
 	} else {
 		if (!settings.raindropToken || !settings.raindropCollectionID) {

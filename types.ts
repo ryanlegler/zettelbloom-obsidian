@@ -63,6 +63,7 @@ export type Item = {
 	collectionId: number;
 };
 
+// TODO - refactor all this metadata stuff
 export type MetaData = {
 	metadata: {
 		website: string;
