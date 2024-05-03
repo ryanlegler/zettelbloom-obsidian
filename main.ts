@@ -1,4 +1,4 @@
-import { ChooseTopicModal } from "src/ChooseTopicModal";
+import { ChooseTopicModal } from "./src/components/ChooseTopicModal";
 import { DEFAULT_SETTINGS } from "./src/constants";
 import {
 	App,
@@ -16,6 +16,7 @@ import "styles.css";
 import { extractUrlFromMarkdown } from "src/utils/extractUrlFromMarkdown";
 import { getMetaData } from "src/utils/getMetaData";
 import { checkIfFileExists } from "src/utils/checkifFileExists";
+import { ScriptModal } from "src/components/ScriptModal";
 
 export default class ZettelBloom extends Plugin {
 	settings: ZettelBloomSettings;
@@ -84,10 +85,10 @@ export default class ZettelBloom extends Plugin {
 		});
 
 		this.addCommand({
-			id: "options-modal",
-			name: "Raindrop Sync Options Modal",
+			id: "command-palette-modal",
+			name: "Command Palette Modal",
 			callback: () => {
-				new OptionsModal(this.app, this.settings).open();
+				new ScriptModal(this.app, this.settings).open();
 			},
 			hotkeys: [
 				{
@@ -152,12 +153,6 @@ export default class ZettelBloom extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-
-	syncInPlace() {
-		console.log("🚀 ~ syncInPlace ~ syncInPlace:");
-		new Notice(`✅ syncInPlace...`);
-		// This function will be called when the user clicks the ribbon icon
 	}
 
 	async clearAutoSync(): Promise<void> {

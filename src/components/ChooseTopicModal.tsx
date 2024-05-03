@@ -3,7 +3,7 @@ import { MetaData, ZettelBloomSettings } from "types";
 import { createInPlace } from "src/utils/createInPlace";
 import { Root, createRoot } from "react-dom/client";
 import { StrictMode } from "react";
-import { TopicTagPicker } from "./components/TopicTagPicker";
+import { TopicTagPicker } from "./TopicTagPicker";
 
 export class ChooseTopicModal extends Modal {
 	selectedOptions: Set<any>;
@@ -16,6 +16,7 @@ export class ChooseTopicModal extends Modal {
 		settings: ZettelBloomSettings,
 		metadata: MetaData["metadata"]
 	) {
+		console.log("🚀 ~ ChooseTopicModal ~ settings:", settings);
 		super(app);
 		this.settings = settings;
 		this.selectedOptions = new Set(); // stores the selected options
@@ -29,18 +30,12 @@ export class ChooseTopicModal extends Modal {
 			tags,
 			metadata: this.metadata,
 		});
-
-		const { contentEl } = this;
-		contentEl.empty();
+		this.contentEl.empty();
 		this.close();
 	};
 
 	async onOpen() {
-		//
-		let { contentEl } = this;
-		// const wrapper = contentEl.createDiv();
-
-		this.root = createRoot(contentEl);
+		this.root = createRoot(this.contentEl);
 		this.root.render(
 			<StrictMode>
 				<TopicTagPicker
