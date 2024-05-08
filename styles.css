@@ -8,6 +8,10 @@
   display: flex;
 }
 
+.cursor-pointer {
+  cursor: pointer;
+}
+
 .flex-col {
   flex-direction: column;
 }
@@ -29,9 +33,9 @@
   background-color: rgb(0 0 0 / var(--tw-bg-opacity));
 }
 
-.bg-blue-500 {
+.bg-slate-900 {
   --tw-bg-opacity: 1;
-  background-color: rgb(59 130 246 / var(--tw-bg-opacity));
+  background-color: rgb(15 23 42 / var(--tw-bg-opacity));
 }
 
 .p-1 {
@@ -46,6 +50,10 @@
 .py-2 {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+}
+
+.text-left {
+  text-align: left;
 }
 
 .font-bold {
@@ -381,7 +389,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  /* min-width: 70px; */
 }
 
 .rich-link-card .rich-link-image-container.image-is-favicon .rich-link-image {
@@ -390,6 +397,10 @@
   height: auto;
   border-radius: var(--callout-radius);
   aspect-ratio: 1 / 1;
+}
+
+.setting-item.is-disabled {
+  opacity: 0.5;
 }
 
 /* method for favicon */
@@ -416,7 +427,7 @@
     aspect-ratio: 1 / 1;
 } */
 
-.hover\:bg-blue-700:hover {
+.hover\:bg-slate-700:hover {
   --tw-bg-opacity: 1;
-  background-color: rgb(29 78 216 / var(--tw-bg-opacity));
+  background-color: rgb(51 65 85 / var(--tw-bg-opacity));
 }
