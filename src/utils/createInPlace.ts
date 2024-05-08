@@ -1,33 +1,41 @@
 import { App, Notice, TFile } from "obsidian";
-import { MetaData, RainDropMeta, ZettelBloomSettings } from "types";
+import { MetaData, ZettelBloomSettings } from "types";
 import { getRichLinkTemplate } from "./getRichLinkTemplate";
 import { handleTopicTagPages } from "./handleTopicTagPages";
 import { extractUrlFromMarkdown } from "./extractUrlFromMarkdown";
-import { saveToRaindrop } from "./saveToRaindrop";
-import { BASE_RAINDROP_MIRROR_URL } from "../constants";
 import { checkIfFileExists } from "./checkifFileExists";
+import { getIsValidUrl } from "./getIsValidUrl";
+import { backSync } from "./backSync";
 
 export async function createInPlace({
 	settings,
 	app,
 	tags = [],
 	metadata,
+	propagate = true,
 }: {
 	settings: ZettelBloomSettings;
 	app: App;
 	tags: string[];
 	metadata: MetaData["metadata"];
+	propagate?: boolean;
 }) {
 	const selection = app.workspace.activeEditor?.editor?.getSelection();
 	const url = extractUrlFromMarkdown(selection);
 
+	// url should already be validated in the picker - we are checking again just in case
+	if (!url || !getIsValidUrl(url)) {
+		new Notice(`🚨 No URL Found in Selection`);
+		return;
+	}
+
 	const { title, website } = metadata || {};
 
 	const { fileExists, newFileName, filePath } = checkIfFileExists({
-		settings: this.settings,
+		app,
+		settings,
 		title: title,
 		website: website,
-		app: this.app,
 	});
 
 	// this should now never happen because we are checking if the file exists before calling this function.
@@ -47,34 +55,11 @@ export async function createInPlace({
 		}
 
 		if (settings.raindropBackSync) {
-			// save it to Raindrop
-			const raindrop = await saveToRaindrop({
+			await backSync({
 				url,
-				collectionID: settings.raindropCollectionID,
-				token: settings.raindropToken,
+				settings,
+				metadata,
 			});
-
-			if (settings.duplicatePrevention) {
-				const metadataMapped: Partial<RainDropMeta> = {
-					link: url,
-					title,
-					cover: metadata?.banner,
-					excerpt: metadata?.description,
-					created: new Date().toISOString(),
-					lastUpdate: new Date().toISOString(),
-					tags: "",
-					collectionId: parseInt(settings.raindropCollectionID, 10),
-					_id: raindrop?._id,
-				};
-				// Adds it to turso Mirror if it doesn't exist
-				await fetch(`${BASE_RAINDROP_MIRROR_URL}/raindrop`, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(metadataMapped),
-				});
-			}
 		}
 
 		// creates the new file
@@ -87,27 +72,29 @@ export async function createInPlace({
 		await app.vault.create(filePath, content);
 		new Notice(`✅ ${newFileName} - New File Created`);
 
-		// if we have tags
-		if (tags?.length) {
-			await handleTopicTagPages({
-				settings,
-				tags,
-				newFileName,
-				app,
-			});
-		} else {
-			// if we don't have tags, add the link to the Inbox
-			let inboxFile: TFile = app.vault.getAbstractFileByPath(
-				settings.resourceInboxFilePath
-			) as TFile;
-
-			if (inboxFile) {
-				app.vault.read(inboxFile).then((currentContent) => {
-					app.vault.modify(
-						inboxFile,
-						currentContent + `![[${newFileName}]] \n \n`
-					);
+		if (propagate) {
+			// if we have tags
+			if (tags?.length) {
+				await handleTopicTagPages({
+					settings,
+					tags, // tags from the metadata
+					newFileName, // the name of the bookmark file
+					app,
 				});
+			} else {
+				// if we don't have tags, add the link to the Inbox
+				let inboxFile: TFile = app.vault.getAbstractFileByPath(
+					settings.resourceInboxFilePath
+				) as TFile;
+
+				if (inboxFile) {
+					app.vault.read(inboxFile).then((currentContent) => {
+						app.vault.modify(
+							inboxFile,
+							currentContent + `![[${newFileName}]] \n \n`
+						);
+					});
+				}
 			}
 		}
 

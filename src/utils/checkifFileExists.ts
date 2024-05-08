@@ -1,7 +1,7 @@
+import { App } from "obsidian";
 import { ZettelBloomSettings } from "types";
 import { sanitizeFileName } from "./sanitizeFileName";
 import { sanitizeUrl } from "./sanitizeUrl";
-import { App } from "obsidian";
 
 export function checkIfFileExists({
 	settings,
@@ -15,7 +15,9 @@ export function checkIfFileExists({
 	app: App;
 }) {
 	// the new file name
-	let newFileName = `🔗 ${sanitizeFileName(title) || sanitizeUrl(website)}`;
+	let newFileName = `${settings.resourceEmojiPrefix} ${
+		sanitizeFileName(title) || sanitizeUrl(website)
+	}`;
 
 	const { resourceFolderPath } = settings || {};
 

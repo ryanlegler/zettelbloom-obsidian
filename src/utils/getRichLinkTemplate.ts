@@ -1,6 +1,11 @@
 import { MetaData } from "types";
 import { sanitizeFileName } from "./sanitizeFileName";
 import { cleanText } from "./cleanText";
+import { ZETTEL_MARK_SHORT_CODE } from "src/constants";
+import { getTopicTagYaml } from "./getTopicTagYaml";
+
+// TODO - topicTags could be configurable...
+// Maybe all the properties could have a custom mapping...
 
 export function getRichLinkTemplate({
 	metadata,
@@ -21,19 +26,8 @@ export function getRichLinkTemplate({
 	const image = banner;
 	const description = cleanText(descriptionRaw);
 
-	const isFavicon = image?.contains(".ico"); // TODO this could check for other common icon file names like "icon-512x512" or "favicon" etc.
-
 	const resolvedHashtag = hashtag ? `\n${hashtag}` : "";
-	const resolvedTags = tags?.length
-		? `topicTags: \n${tags?.reduce(
-				(acc, tag, index) =>
-					acc +
-					(index === 0
-						? `- ${tag.replace(/,/g, "")}`
-						: `\n- ${tag.replace(/,/g, "")}`),
-				""
-		  )}`
-		: "topicTags:";
+	const resolvedTopicTagsYaml = getTopicTagYaml(tags);
 
 	return `---
 resource: website
@@ -41,22 +35,10 @@ title: ${title}
 source: ${website}
 description: ${description || ""}
 image: ${image || ""}
-${resolvedTags}
+${resolvedTopicTagsYaml}
 ---${resolvedHashtag}
 
-<div class="rich-link-card-container"><a class="rich-link-card" href="${website}" target="_blank"> ${
-		image
-			? `<div class="rich-link-image-container ${
-					isFavicon ? "image-is-favicon" : ""
-			  }"><div
-class="rich-link-image"
-style="background-image: url('${image}')"
-></div></div>`
-			: ""
-	} <div class="rich-link-card-text"><h1 class="rich-link-card-title">${title}</h1> ${
-		description
-			? `<p class="rich-link-card-description">${description}</p>`
-			: ""
-	} <p class="rich-link-href">${website}</p></div></a></div>
+${ZETTEL_MARK_SHORT_CODE}
+
 `;
 }
