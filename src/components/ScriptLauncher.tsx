@@ -7,16 +7,19 @@ export const ScriptLauncher = ({
 }) => {
 	return (
 		<div className="flex flex-col gap-2 mt-3">
-			<h2 className="font-bold">Choose Script to Run</h2>
-			{options.map((option) => (
-				<button
-					key={option.value}
-					className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-					onClick={() => onConfirm(option.value)}
-				>
-					{option.label}
-				</button>
-			))}
+			<h4 className="font-bold">Choose Script to Run</h4>
+
+			<div className="flex flex-col gap-2">
+				{options.map((option) => (
+					<div
+						key={option.value}
+						className=" text-white py-2 px-4 rounded text-left bg-slate-900 hover:bg-slate-700 cursor-pointer"
+						onClick={() => onConfirm(option.value)}
+					>
+						{option.label}
+					</div>
+				))}
+			</div>
 		</div>
 	);
 };

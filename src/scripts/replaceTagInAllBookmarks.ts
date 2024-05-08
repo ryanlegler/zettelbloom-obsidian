@@ -9,7 +9,6 @@ export async function replaceTagInAllBookmarks({
 	app: App;
 	settings: ZettelBloomSettings;
 }) {
-	console.log("🚀 ~ settings:", settings);
 	const markdownFiles = app.vault.getMarkdownFiles();
 
 	for (const file of markdownFiles) {

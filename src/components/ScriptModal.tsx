@@ -2,16 +2,54 @@ import { App, Modal } from "obsidian";
 import { Root, createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import { ScriptLauncher } from "./ScriptLauncher";
-import { removeBookmarkWithoutTag } from "../utils/removeBookmarkWithoutTag";
-import { removeTagFromBookmarks } from "../utils/removeTagFromBookmarks";
 import { ZettelBloomSettings } from "types";
-import { replaceTagInAllBookmarks } from "src/utils/replaceTagInAllBookmarks";
+
+import { removeTagFromBookmarks } from "../scripts/removeTagFromBookmarks";
+import { removeBookmarkWithoutTag } from "../scripts/removeBookmarkWithoutTag";
+import { replaceTagInAllBookmarks } from "../scripts/replaceTagInAllBookmarks";
+import { fetchMissingMetadata } from "../scripts/fetchMissingMetadata";
+import { convertToZettelMark } from "../scripts/convertToZettelMark";
+import { fetchMissingTopicTags } from "../scripts/fetchMissingTopicTags";
+import { fetchMissingTopicTagsForFile } from "../scripts/fetchMissingTopicTagsForFile";
+import { convertLinksToBookmarksForFile } from "../scripts/convertLinksToBookmarksForFile";
+import { attachBookmarkToTopicTagFiles } from "src/scripts/attachBookmarkToTopicTagFiles";
 
 type Option = { label: string; value: string };
 
 const options: Option[] = [
-	{ label: "Remove Bookmark Without Tag", value: "removeBookmarkWithoutTag" },
-	{ label: "Remove Tag From Bookmarks", value: "removeTagFromBookmarks" },
+	{
+		label: "Convert Links To Bookmarks (From Current File)",
+		value: "convertLinksToBookmarksForFile",
+	},
+	{
+		label: "Remove Bookmark Without Tag (From Current File)",
+		value: "removeBookmarkWithoutTag",
+	},
+	{
+		label: "Remove Tag From Bookmarks (From Current File)",
+		value: "removeTagFromBookmarks",
+	},
+	{
+		label: "Fetch Missing Metadata (All Files)",
+		value: "fetchMissingMetadata",
+	},
+	{
+		label: "Convert To ZettelMark (All Files)",
+		value: "convertToZettelMark",
+	},
+	{
+		label: "Fetch Missing TopicTags (All Files)",
+		value: "fetchMissingTopicTags",
+	},
+	{
+		label: "Fetch Missing TopicTags (From Current File)",
+		value: "fetchMissingTopicTagsForFile",
+	},
+	{
+		label: "Attach Bookmark To TopicTag Files (All Files)",
+		value: "attachBookmarkToTopicTagFiles",
+	},
+
 	// {
 	// 	label: "Replace #gather with tag in all Bookmarks",
 	// 	value: "replaceTagInAllBookmarks",
@@ -27,6 +65,12 @@ const functionMap: FunctionMapType = {
 	removeBookmarkWithoutTag,
 	removeTagFromBookmarks,
 	replaceTagInAllBookmarks,
+	fetchMissingMetadata,
+	convertToZettelMark,
+	fetchMissingTopicTags,
+	fetchMissingTopicTagsForFile,
+	convertLinksToBookmarksForFile,
+	attachBookmarkToTopicTagFiles,
 };
 
 export class ScriptModal extends Modal {
