@@ -5,16 +5,20 @@ export const BASE_RAINDROP_MIRROR_URL = "https://raindrop-sync.vercel.app/api";
 
 export const TOPIC_TAG = "#propagate";
 
+export const ZETTEL_MARK_SHORT_CODE = "```zettelMark\n```";
+export const ZETTEL_MARK_EMOJI = "🔗";
+
 export const DEFAULT_SETTINGS: ZettelBloomSettings = {
-	mySetting: "default",
-	autoSyncInterval: "5",
-	syncEnabled: true,
-	raindropToken: "",
+	raindropSync: true,
+	raindropAutoSync: false,
 	raindropCollectionID: "",
-	resourceFolderPath: "",
-	devTopicFolderPath: "",
-	resourceInboxFilePath: "",
-	devTopicUpLinkPath: "",
+	raindropToken: "",
 	raindropBackSync: true,
+	autoSyncInterval: "5",
+	resourceFolderPath: "",
+	resourceInboxFilePath: "",
+	devTopicFolderPath: "",
+	devTopicUpLinkPath: "",
 	duplicatePrevention: true,
+	resourceEmojiPrefix: ZETTEL_MARK_EMOJI,
 };

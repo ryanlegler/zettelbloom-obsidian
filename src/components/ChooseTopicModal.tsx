@@ -5,22 +5,35 @@ import { Root, createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import { TopicTagPicker } from "./TopicTagPicker";
 
+type ChooseTopicModalProps = {
+	app: App;
+	settings: ZettelBloomSettings;
+	metadata: MetaData["metadata"];
+	tagList: string[];
+	suggested: string[];
+};
+
 export class ChooseTopicModal extends Modal {
 	selectedOptions: Set<any>;
 	settings: ZettelBloomSettings;
 	root: Root | null = null;
 	metadata: MetaData["metadata"];
+	tagList: string[];
+	suggested: string[];
 
-	constructor(
-		app: App,
-		settings: ZettelBloomSettings,
-		metadata: MetaData["metadata"]
-	) {
-		console.log("🚀 ~ ChooseTopicModal ~ settings:", settings);
+	constructor({
+		app,
+		settings,
+		metadata,
+		tagList,
+		suggested,
+	}: ChooseTopicModalProps) {
 		super(app);
-		this.settings = settings;
 		this.selectedOptions = new Set(); // stores the selected options
+		this.settings = settings;
 		this.metadata = metadata;
+		this.suggested = suggested;
+		this.tagList = tagList;
 	}
 
 	onConfirm = (tags: string[]) => {
@@ -39,6 +52,8 @@ export class ChooseTopicModal extends Modal {
 		this.root.render(
 			<StrictMode>
 				<TopicTagPicker
+					tagList={this.tagList}
+					suggested={this.suggested}
 					app={this.app}
 					settings={this.settings}
 					onConfirm={this.onConfirm}

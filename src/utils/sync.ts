@@ -68,7 +68,7 @@ export async function sync({
 		const { title, website } = metadata || {};
 
 		// the new file name
-		let newFileName = `🔗 ${
+		let newFileName = `${settings.resourceEmojiPrefix} ${
 			sanitizeFileName(title) || sanitizeUrl(website)
 		}`;
 
@@ -86,8 +86,7 @@ export async function sync({
 			fileExistCount += 1;
 		} else {
 			// Adds it to turso Mirror if it doesn't exist
-
-			await fetch(`https://raindrop-sync.vercel.app/api/raindrop`, {
+			await fetch(`${BASE_RAINDROP_MIRROR_URL}/raindrop`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",

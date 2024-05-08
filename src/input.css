@@ -228,7 +228,6 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	/* min-width: 70px; */
 }
 
 .rich-link-card .rich-link-image-container.image-is-favicon .rich-link-image {
@@ -239,6 +238,9 @@
 	aspect-ratio: 1 / 1;
 }
 
+.setting-item.is-disabled {
+	opacity: 0.5;
+}
 /* method for favicon */
 /* .rich-link-card .rich-link-image-container.image-is-favicon {
     background: rgba(0, 0, 0, 0.17);

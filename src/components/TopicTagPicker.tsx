@@ -1,42 +1,29 @@
 // import React from "react";
 
-import { App, Modal } from "obsidian";
+import { App } from "obsidian";
 import { ZettelBloomSettings } from "types";
 import Select from "react-select";
 import { useCallback, useState } from "react";
 
 export const TopicTagPicker = ({
-	app,
-	settings,
 	onConfirm,
+	suggested,
+	tagList,
 }: {
 	app: App;
 	settings: ZettelBloomSettings;
 	onConfirm: (tags: string[]) => void;
+	suggested: string[];
+	tagList: string[];
 }) => {
-	const markdownFiles = app.vault.getMarkdownFiles();
-
-	let topicTags = new Set();
-	for (const file of markdownFiles) {
-		if (file.path.startsWith(settings.resourceFolderPath)) {
-			const cache = app.metadataCache.getFileCache(file);
-			const tags = cache?.frontmatter?.topicTags; // assumes we are using the "topicTags" frontmatter for tags
-			if (tags) {
-				tags.forEach((tag: string) => {
-					topicTags.add(tag);
-				});
-			}
-		}
-	}
-
-	const options = Array.from(topicTags).map((tag) => {
+	const options = Array.from(tagList).map((tag) => {
 		return {
 			label: tag,
 			value: tag,
 		};
 	}) as { label: string; value: string }[];
 
-	const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+	const [selectedOptions, setSelectedOptions] = useState<string[]>(suggested);
 
 	const handleOnChange = (
 		selectedOptions: { label: string; value: string }[]
@@ -57,6 +44,12 @@ export const TopicTagPicker = ({
 				placeholder="Choose one or more Topic Tags"
 				options={options}
 				onChange={handleOnChange}
+				value={selectedOptions.map((option) => {
+					return {
+						label: option,
+						value: option,
+					};
+				})}
 				className="my-react-select-container"
 				classNamePrefix="my-react-select"
 			/>
