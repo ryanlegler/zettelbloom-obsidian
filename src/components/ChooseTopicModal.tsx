@@ -54,8 +54,6 @@ export class ChooseTopicModal extends Modal {
 				<TopicTagPicker
 					tagList={this.tagList}
 					suggested={this.suggested}
-					app={this.app}
-					settings={this.settings}
 					onConfirm={this.onConfirm}
 				/>
 			</StrictMode>

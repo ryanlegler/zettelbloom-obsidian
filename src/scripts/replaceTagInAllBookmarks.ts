@@ -1,14 +1,16 @@
+import ZettelBloom from "main";
 import { App, TFile } from "obsidian";
 import { TOPIC_TAG } from "src/constants";
 import { ZettelBloomSettings } from "types";
 
 export async function replaceTagInAllBookmarks({
 	app,
-	settings,
+	plugin,
 }: {
 	app: App;
-	settings: ZettelBloomSettings;
+	plugin: ZettelBloom;
 }) {
+	const { settings, app } = plugin;
 	const markdownFiles = app.vault.getMarkdownFiles();
 
 	for (const file of markdownFiles) {

@@ -6,14 +6,20 @@ import { getRichLinkTemplate } from "./getRichLinkTemplate";
 import { sanitizeFileName } from "./sanitizeFileName";
 import { sanitizeUrl } from "./sanitizeUrl";
 import { handleTopicTagPages } from "./handleTopicTagPages";
+import { cleanPermalink } from "./cleanPermalink";
+import { checkIfLinkExistsInCache } from "./checkifLinkExistsInCache";
+import ZettelBloom from "main";
+import { saveResourceUrlCache } from "./saveResourceUrlCache";
 
 export async function sync({
 	settings,
+	plugin,
 	app,
 	manualSync,
 }: {
 	settings: ZettelBloomSettings;
 	app: App;
+	plugin: ZettelBloom;
 	manualSync?: boolean;
 }) {
 	// fetches the raindrop items
@@ -36,27 +42,20 @@ export async function sync({
 
 	let fileExistCount = 0;
 
-	// Get the mirrored drops from the turso mirror
-	const mirroredResponse = await fetch(
-		`${BASE_RAINDROP_MIRROR_URL}/raindrops`,
-		{
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-			},
-		}
-	);
-	const mirroredData = await mirroredResponse.json();
-
 	// loop over converted items and call an async function for each one
 	for (const convertedItem of convertedItems) {
 		// for each item, check if it already exists in the mirrored data
-		const raindropExists = mirroredData.find(
-			(raindrop: any) => raindrop._id === convertedItem.raindropMeta._id
-		);
+		// const linkAlreadySaved = mirroredData.find(
+		// 	(raindrop: any) => raindrop._id === convertedItem.raindropMeta._id
+		// );
+
+		const linkAlreadySaved = checkIfLinkExistsInCache({
+			link: convertedItem?.raindropMeta?.link,
+			resourceUrlCache: settings.resourceUrlCache,
+		});
 
 		// if the raindrop exists in the mirror, show a notice and continue to the next item
-		if (raindropExists) {
+		if (linkAlreadySaved) {
 			// new Notice(
 			// 	`✅ ${convertedItem.raindropMeta.title} - Has been synced from another client`
 			// );
@@ -85,16 +84,11 @@ export async function sync({
 			// new Notice(`⚠️ ${newFileName} - Already exists`);
 			fileExistCount += 1;
 		} else {
-			// Adds it to turso Mirror if it doesn't exist
-			await fetch(`${BASE_RAINDROP_MIRROR_URL}/raindrop`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(convertedItem.raindropMeta),
+			saveResourceUrlCache({
+				link: website,
+				plugin,
 			});
 
-			// await tp.file.create_new(content, newFileName, false, folder);
 			new Notice(`✅ ${newFileName} - New File Created`);
 
 			// if we have tags

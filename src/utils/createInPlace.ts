@@ -6,6 +6,7 @@ import { extractUrlFromMarkdown } from "./extractUrlFromMarkdown";
 import { checkIfFileExists } from "./checkifFileExists";
 import { getIsValidUrl } from "./getIsValidUrl";
 import { backSync } from "./backSync";
+import { checkIfLinkExistsInCache } from "./checkifLinkExistsInCache";
 
 export async function createInPlace({
 	settings,
@@ -31,7 +32,12 @@ export async function createInPlace({
 
 	const { title, website } = metadata || {};
 
-	const { fileExists, newFileName, filePath } = checkIfFileExists({
+	const linkAlreadySaved = checkIfLinkExistsInCache({
+		link: metadata.website,
+		resourceUrlCache: settings.resourceUrlCache,
+	});
+
+	const { fileExists, newFileName, filePath } = await checkIfFileExists({
 		app,
 		settings,
 		title: title,
@@ -40,7 +46,7 @@ export async function createInPlace({
 
 	// this should now never happen because we are checking if the file exists before calling this function.
 	// just incase we missed something, we will check again
-	if (fileExists) {
+	if (fileExists || linkAlreadySaved) {
 		new Notice(`🚨 File Already Exists: "${newFileName}"`);
 		// put the link in the current selection in the editor
 		app.workspace.activeEditor?.editor?.replaceSelection(

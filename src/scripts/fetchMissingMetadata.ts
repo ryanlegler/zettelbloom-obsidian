@@ -1,17 +1,17 @@
 import { App, Notice, TFile } from "obsidian";
 import { getMetaData } from "src/utils/getMetaData";
 import { getRichLinkTemplate } from "src/utils/getRichLinkTemplate";
-import { MetaData, ZettelBloomSettings } from "types";
-
+import { MetaData } from "types";
+import ZettelBloom from "main";
 export async function fetchMissingMetadata({
 	app,
-	settings,
+	plugin,
 }: {
 	app: App;
-	settings: ZettelBloomSettings;
+	plugin: ZettelBloom;
 }) {
+	const { settings, app } = plugin;
 	const markdownFiles = app.vault.getMarkdownFiles();
-
 	for (const file of markdownFiles) {
 		const cache = app.metadataCache.getFileCache(file as TFile);
 		const { title, source, topicTags } = cache?.frontmatter || {};

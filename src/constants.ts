@@ -19,6 +19,6 @@ export const DEFAULT_SETTINGS: ZettelBloomSettings = {
 	resourceInboxFilePath: "",
 	devTopicFolderPath: "",
 	devTopicUpLinkPath: "",
-	duplicatePrevention: true,
 	resourceEmojiPrefix: ZETTEL_MARK_EMOJI,
+	resourceUrlCache: {},
 };

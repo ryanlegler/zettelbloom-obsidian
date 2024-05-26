@@ -1,7 +1,5 @@
 // import React from "react";
 
-import { App } from "obsidian";
-import { ZettelBloomSettings } from "types";
 import Select from "react-select";
 import { useCallback, useState } from "react";
 
@@ -10,10 +8,8 @@ export const TopicTagPicker = ({
 	suggested,
 	tagList,
 }: {
-	app: App;
-	settings: ZettelBloomSettings;
-	onConfirm: (tags: string[]) => void;
-	suggested: string[];
+	onConfirm?: (tags: string[]) => void;
+	suggested?: string[];
 	tagList: string[];
 }) => {
 	const options = Array.from(tagList).map((tag) => {
@@ -23,7 +19,9 @@ export const TopicTagPicker = ({
 		};
 	}) as { label: string; value: string }[];
 
-	const [selectedOptions, setSelectedOptions] = useState<string[]>(suggested);
+	const [selectedOptions, setSelectedOptions] = useState<string[]>(
+		suggested || []
+	);
 
 	const handleOnChange = (
 		selectedOptions: { label: string; value: string }[]
@@ -32,7 +30,7 @@ export const TopicTagPicker = ({
 		setSelectedOptions(strings);
 	};
 	const handleConfirm = useCallback(() => {
-		onConfirm(selectedOptions);
+		onConfirm?.(selectedOptions);
 	}, [onConfirm, selectedOptions]);
 
 	return (

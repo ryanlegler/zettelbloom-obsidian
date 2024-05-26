@@ -1,15 +1,10 @@
-import { App, Notice, TFile } from "obsidian";
+import ZettelBloom from "main";
+import { TFile } from "obsidian";
 import { getTopicTagSet } from "src/utils/getTopicTagSet";
 import { processTopicTagForFile } from "src/utils/processTopicTagForFile";
-import { ZettelBloomSettings } from "types";
 
-export async function fetchMissingTopicTagsForFile({
-	app,
-	settings,
-}: {
-	app: App;
-	settings: ZettelBloomSettings;
-}) {
+export async function fetchMissingTopicTagsForFile(plugin: ZettelBloom) {
+	const { settings, app } = plugin;
 	let folderPath = settings.resourceFolderPath;
 	const tagList = getTopicTagSet({
 		files: app.vault.getMarkdownFiles(),

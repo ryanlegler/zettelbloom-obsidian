@@ -1,14 +1,9 @@
-import { App, TFile } from "obsidian";
+import ZettelBloom from "main";
+import { TFile } from "obsidian";
 import { TOPIC_TAG } from "src/constants";
-import { ZettelBloomSettings } from "types";
 
-export async function removeBookmarkWithoutTag({
-	app,
-	settings,
-}: {
-	app: App;
-	settings: ZettelBloomSettings;
-}) {
+export async function removeBookmarkWithoutTag(plugin: ZettelBloom) {
+	const { settings, app } = plugin;
 	const currentFile = app.workspace.getActiveFile(); // Currently Open Note
 	if (!currentFile) {
 		console.error("No file is currently open.");

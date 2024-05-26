@@ -1,21 +1,18 @@
+import ZettelBloom from "main";
 import { App, Notice, TFile } from "obsidian";
 import { backSync } from "src/utils/backSync";
 import { checkIfFileExists } from "src/utils/checkifFileExists";
+import { checkIfLinkExistsInCache } from "src/utils/checkifLinkExistsInCache";
 import { extractUrlFromMarkdown } from "src/utils/extractUrlFromMarkdown";
 import { getIsValidUrl } from "src/utils/getIsValidUrl";
 import { getMetaData } from "src/utils/getMetaData";
 import { getRichLinkTemplate } from "src/utils/getRichLinkTemplate";
 import { getTopicTagSet } from "src/utils/getTopicTagSet";
-import { MetaData, ZettelBloomSettings } from "types";
+import { saveResourceUrlCache } from "src/utils/saveResourceUrlCache";
+import { MetaData } from "types";
 
-export async function convertLinksToBookmarksForFile({
-	app,
-	settings,
-}: {
-	app: App;
-	settings: ZettelBloomSettings;
-}) {
-	//
+export async function convertLinksToBookmarksForFile(plugin: ZettelBloom) {
+	const { settings, app } = plugin;
 
 	// get current file
 	const file = app.workspace.getActiveFile();
@@ -55,11 +52,16 @@ export async function convertLinksToBookmarksForFile({
 
 		const { title, website } = metadata || {};
 
-		const { fileExists, newFileName, filePath } = checkIfFileExists({
+		const linkAlreadySaved = checkIfLinkExistsInCache({
+			link: metadata.website,
+			resourceUrlCache: settings.resourceUrlCache,
+		});
+
+		const { fileExists, newFileName, filePath } = await checkIfFileExists({
 			app,
 			settings,
-			title: title,
-			website: website,
+			title,
+			website,
 		});
 
 		app.vault.read(file).then((currentContent) => {
@@ -74,7 +76,7 @@ export async function convertLinksToBookmarksForFile({
 		// this is the bookmark for each selection
 		// if the file already exists, we will just add the link to the file
 
-		if (fileExists) {
+		if (fileExists || linkAlreadySaved) {
 			new Notice(`🚨 File Already Exists: "${newFileName}"`);
 		} else {
 			// if the file doesn't exist, we will create a new file
@@ -86,6 +88,11 @@ export async function convertLinksToBookmarksForFile({
 			});
 
 			await app.vault.create(filePath, content);
+
+			saveResourceUrlCache({
+				link: website,
+				plugin,
+			});
 			new Notice(`✅ ${newFileName} - New File Created`);
 
 			if (settings.raindropBackSync) {

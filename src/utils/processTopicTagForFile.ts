@@ -65,7 +65,7 @@ export async function processTopicTagForFile({
 		});
 
 	// now we are creating a new link in each topic tag page / will also create the topic tag page if it doesn't exist
-	const { newFileName } = checkIfFileExists({
+	const { newFileName } = await checkIfFileExists({
 		app,
 		settings,
 		title: title || "",

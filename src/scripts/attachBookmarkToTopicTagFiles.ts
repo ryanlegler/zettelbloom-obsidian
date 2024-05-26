@@ -1,19 +1,14 @@
-import { App, Notice, TFile } from "obsidian";
+import ZettelBloom from "main";
+import { TFile } from "obsidian";
 
 import { handleTopicTagPages } from "src/utils/handleTopicTagPages";
-import { ZettelBloomSettings } from "types";
 
 // The function below is supposed to attach bookmarks to topic tag files
-// NOT WORKING....
-export async function attachBookmarkToTopicTagFiles({
-	app,
-	settings,
-}: {
-	app: App;
-	settings: ZettelBloomSettings;
-}) {
+export async function attachBookmarkToTopicTagFiles(plugin: ZettelBloom) {
+	const { settings, app } = plugin;
 	const markdownFiles = app.vault.getMarkdownFiles();
 
+	// all the dev topic file paths
 	const devTopicFilePaths =
 		markdownFiles
 			?.map((file) => file?.path)
@@ -22,15 +17,15 @@ export async function attachBookmarkToTopicTagFiles({
 			}) || [];
 
 	for (const file of markdownFiles) {
-		console.log("🚀 ~ file:", file);
 		// how do i get the inlinks of a file?
-		const cache = app.metadataCache.getFileCache(file as TFile);
 
+		const cache = app.metadataCache.getFileCache(file as TFile);
 		const { topicTags } = cache?.frontmatter || {};
 		if (
 			file.path.startsWith(settings.resourceFolderPath) &&
 			topicTags?.length
 		) {
+			// we are a resource with tags...
 			await handleTopicTagPages({
 				settings,
 				tags: topicTags,

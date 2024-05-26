@@ -4,87 +4,110 @@ import { StrictMode } from "react";
 import { ScriptLauncher } from "./ScriptLauncher";
 import { ZettelBloomSettings } from "types";
 
+// scripts
 import { removeTagFromBookmarks } from "../scripts/removeTagFromBookmarks";
 import { removeBookmarkWithoutTag } from "../scripts/removeBookmarkWithoutTag";
-import { replaceTagInAllBookmarks } from "../scripts/replaceTagInAllBookmarks";
-import { fetchMissingMetadata } from "../scripts/fetchMissingMetadata";
-import { convertToZettelMark } from "../scripts/convertToZettelMark";
-import { fetchMissingTopicTags } from "../scripts/fetchMissingTopicTags";
 import { fetchMissingTopicTagsForFile } from "../scripts/fetchMissingTopicTagsForFile";
 import { convertLinksToBookmarksForFile } from "../scripts/convertLinksToBookmarksForFile";
 import { attachBookmarkToTopicTagFiles } from "src/scripts/attachBookmarkToTopicTagFiles";
+import { removeDuplicateBookmarkOnFile } from "src/scripts/removeDuplicateBookmarkOnFile";
+import { attachBookmarkToTopicTagForCurrentFile } from "src/scripts/attachBookmarkToTopicTagForCurrentFile";
+import { removeSpaceBetweenBookmarksOnFile } from "src/scripts/removeSpaceBetweenBookmarksOnFile";
+import { removeSpaceBetweenBookmarksAllFiles } from "src/scripts/removeSpaceBetweenBookmarksAllFiles";
+import ZettelBloom from "main";
+import { purgeBookmark } from "src/scripts/purgeBookmark";
 
-type Option = { label: string; value: string };
+type Option = {
+	label: string;
+	value: string;
+	action: (plugin: ZettelBloom) => void;
+};
 
 const options: Option[] = [
 	{
-		label: "Convert Links To Bookmarks (From Current File)",
-		value: "convertLinksToBookmarksForFile",
+		label: "Remove Duplicate Bookmarks (From Current File)",
+		value: "removeDuplicateBookmarkOnFile",
+		action: removeDuplicateBookmarkOnFile,
 	},
 	{
-		label: "Remove Bookmark Without Tag (From Current File)",
-		value: "removeBookmarkWithoutTag",
+		label: "Convert Links To Bookmarks (From Current File)",
+		value: "convertLinksToBookmarksForFile",
+		action: convertLinksToBookmarksForFile,
 	},
+	// {
+	// 	label: "Remove Bookmark Without Tag (From Current File)",
+	// 	value: "removeBookmarkWithoutTag",
+	// 	action: removeBookmarkWithoutTag,
+	// },
 	{
 		label: "Remove Tag From Bookmarks (From Current File)",
 		value: "removeTagFromBookmarks",
+		action: removeTagFromBookmarks,
+	},
+	// {
+	// 	label: "Fetch Missing TopicTags (From Current File)",
+	// 	value: "fetchMissingTopicTagsForFile",
+	// 	action: fetchMissingTopicTagsForFile,
+	// },
+	{
+		label: "Remove line Breaks Between Bookmarks (From Current File)",
+		value: "removeSpaceBetweenBookmarksOnFile",
+		action: removeSpaceBetweenBookmarksOnFile,
 	},
 	{
-		label: "Fetch Missing Metadata (All Files)",
-		value: "fetchMissingMetadata",
+		label: "Purge (deletes Current Bookmark and removes all links to it)",
+		value: "purgeBookmark",
+		action: purgeBookmark,
 	},
-	{
-		label: "Convert To ZettelMark (All Files)",
-		value: "convertToZettelMark",
-	},
-	{
-		label: "Fetch Missing TopicTags (All Files)",
-		value: "fetchMissingTopicTags",
-	},
-	{
-		label: "Fetch Missing TopicTags (From Current File)",
-		value: "fetchMissingTopicTagsForFile",
-	},
-	{
-		label: "Attach Bookmark To TopicTag Files (All Files)",
-		value: "attachBookmarkToTopicTagFiles",
-	},
+	// {
+	// 	label: "Fetch Missing Metadata (All Files)",
+	// 	value: "fetchMissingMetadata",
+	// 	action: fetchMissingMetadata,
+	// },
+	// {
+	// 	label: "Remove Duplicate Bookmarks (All Files)",
+	// 	value: "removeDuplicateBookmarkOnAllFiles",
+	// 	action: removeDuplicateBookmarkOnAllFiles,
+	// },
+	// {
+	// 	label: "Convert To ZettelMark (All Files)",
+	// 	value: "convertToZettelMark",
+	// 	action: convertToZettelMark,
+	// },
+	// {
+	// 	label: "Fetch Missing TopicTags (All Files)",
+	// 	value: "fetchMissingTopicTags",
+	// 	action: fetchMissingTopicTags,
+	// },
 
+	{
+		label: "Attach Bookmark To TopicTag Files (Current File)",
+		value: "attachBookmarkToTopicTagForCurrentFile",
+		action: attachBookmarkToTopicTagForCurrentFile,
+	},
+	// {
+	// 	label: "Attach Bookmark To TopicTag Files (All Files)",
+	// 	value: "attachBookmarkToTopicTagFiles",
+	// 	action: attachBookmarkToTopicTagFiles,
+	// },
 	// {
 	// 	label: "Replace #gather with tag in all Bookmarks",
 	// 	value: "replaceTagInAllBookmarks",
 	// },
 ];
 
-type FunctionMapType = Record<
-	string,
-	({ app, settings }: { app: App; settings: ZettelBloomSettings }) => void
->;
-
-const functionMap: FunctionMapType = {
-	removeBookmarkWithoutTag,
-	removeTagFromBookmarks,
-	replaceTagInAllBookmarks,
-	fetchMissingMetadata,
-	convertToZettelMark,
-	fetchMissingTopicTags,
-	fetchMissingTopicTagsForFile,
-	convertLinksToBookmarksForFile,
-	attachBookmarkToTopicTagFiles,
-};
-
 export class ScriptModal extends Modal {
 	root: Root | null = null;
 	options: Option[] = options;
-	settings: ZettelBloomSettings;
+	plugin: ZettelBloom;
 
-	constructor(app: App, settings: ZettelBloomSettings) {
-		super(app);
-		this.settings = settings;
+	constructor(plugin: ZettelBloom) {
+		super(plugin.app);
+		this.plugin = plugin;
 	}
 
 	onConfirm = (payload: string) => {
-		functionMap[payload]?.({ app: this.app, settings: this.settings });
+		options.find((option) => option.value === payload)?.action(this.plugin);
 		this.contentEl.empty();
 		this.close();
 	};

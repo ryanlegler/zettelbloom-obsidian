@@ -1,30 +1,27 @@
-import { ChooseTopicModal } from "./src/components/ChooseTopicModal";
 import { DEFAULT_SETTINGS } from "./src/constants";
 import {
 	App,
-	Modal,
 	Notice,
 	Plugin,
 	PluginSettingTab,
 	Setting,
 	TFile,
+	WorkspaceLeaf,
+	parseYaml,
 } from "obsidian";
 import { MetaData, ZettelBloomSettings } from "types";
-
 import { sync } from "src/utils/sync";
-
-import "styles.css";
-import { extractUrlFromMarkdown } from "src/utils/extractUrlFromMarkdown";
-import { getMetaData } from "src/utils/getMetaData";
-import { checkIfFileExists } from "src/utils/checkifFileExists";
 import { ScriptModal } from "src/components/ScriptModal";
 import { Root, createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import { ZettelMark } from "src/components/ZettelMark";
-import { getIsValidUrl } from "src/utils/getIsValidUrl";
-import { getTopicTagSet } from "src/utils/getTopicTagSet";
-import { createInPlace } from "src/utils/createInPlace";
+import { inPlaceCommand } from "src/commands/inPlaceCommand";
+import { ExampleView, VIEW_TYPE_EXAMPLE } from "src/view/exampleView";
 
+import "styles.css";
+import { removeBookmarkFromFilePath } from "src/utils/removeBookmarkfromFilePath";
+import { TopicTagModal } from "src/components/TopicTagModal";
+import { sanitizeFileName } from "src/utils/sanitizeFileName";
 export default class ZettelBloom extends Plugin {
 	settings: ZettelBloomSettings;
 	private timeoutIDAutoSync?: number;
@@ -43,6 +40,7 @@ export default class ZettelBloom extends Plugin {
 						settings: this.settings,
 						app: this.app,
 						manualSync: true,
+						plugin: this,
 					});
 				}
 			);
@@ -54,87 +52,22 @@ export default class ZettelBloom extends Plugin {
 		const statusBarItemEl = this.addStatusBarItem();
 		statusBarItemEl.setText("Status Bar Text");
 
+		this.registerView(
+			VIEW_TYPE_EXAMPLE,
+			(leaf) => new ExampleView(leaf, this.settings)
+		);
+
+		this.addRibbonIcon("dice", "Activate view", () => {
+			this.activateView();
+		});
+
 		this.addCommand({
 			id: "in-place-bookmark",
 			name: "ZettelBloom In-Place Bookmark",
 			callback: async () => {
-				const selection =
-					app.workspace.activeEditor?.editor?.getSelection();
-
-				const url = extractUrlFromMarkdown(selection);
-
-				if (!url || !getIsValidUrl(url)) {
-					new Notice(`🚨 No URL Found in Selection`);
-					return;
-				}
-				const metadata: MetaData["metadata"] = await getMetaData(url);
-
-				const { fileExists, newFileName } = checkIfFileExists({
-					settings: this.settings,
-					title: metadata.title,
-					website: metadata.website,
-					app: this.app,
+				inPlaceCommand({
+					plugin: this,
 				});
-
-				const tagList = getTopicTagSet({
-					files: this.app.vault.getMarkdownFiles(),
-					resourceFolderPath: this.settings.resourceFolderPath,
-				});
-
-				if (fileExists) {
-					new Notice(`🚨 File Already Exists: "${metadata.title}"`);
-					// put the link in the current selection in the editor
-					app.workspace.activeEditor?.editor?.replaceSelection(
-						`![[${newFileName}]]`
-					);
-
-					return;
-				} else {
-					// TODO account for other emoji prefixes
-					// get current file
-					// use the title of the file as the tag - if it's one of the topic tags
-
-					const file = app.workspace.getActiveFile();
-					const title = file?.basename?.replace("🏷️ ", "") || "";
-					const tags =
-						(Array.from(tagList).includes(title) && [title]) || [];
-
-					if (tags.length) {
-						createInPlace({
-							app: this.app,
-							settings: this.settings,
-							metadata,
-							tags,
-							propagate: false, // we don't want to propagate the link - we are already adding it in place and are in a topic tag page
-						});
-					} else {
-						const { title } = metadata || {};
-						const response = await fetch(
-							`https://zettelbloom-api.vercel.app/api/getTopicTagMatch`,
-							{
-								method: "POST",
-								headers: {
-									"Content-Type": "application/json",
-								},
-								body: JSON.stringify({
-									metadata: metadata,
-									tagList: Array.from(tagList),
-								}),
-							}
-						);
-						new Notice(`Fetched Topic Tags for ${title}`);
-
-						const suggested = await response.json();
-
-						new ChooseTopicModal({
-							app: this.app,
-							settings: this.settings,
-							metadata,
-							tagList: Array.from(tagList),
-							suggested,
-						}).open();
-					}
-				}
 			},
 			hotkeys: [
 				{
@@ -148,7 +81,7 @@ export default class ZettelBloom extends Plugin {
 			id: "command-palette-modal",
 			name: "Command Palette Modal",
 			callback: () => {
-				new ScriptModal(this.app, this.settings).open();
+				new ScriptModal(this).open();
 			},
 			hotkeys: [
 				{
@@ -161,26 +94,95 @@ export default class ZettelBloom extends Plugin {
 		this.registerMarkdownCodeBlockProcessor(
 			"zettelMark",
 			(_source, el, context) => {
+				const isEmbedded =
+					el.parentElement?.classList?.contains("cm-embed-block");
+
+				const { fit } = parseYaml(_source) || {};
+
 				const file = this.app.vault.getAbstractFileByPath(
 					context.sourcePath
-				);
-				const cache = this.app.metadataCache.getFileCache(
-					file as TFile
-				);
-				const { title, source, description, image, tags } =
+				) as TFile;
+				const cache = this.app.metadataCache.getFileCache(file);
+
+				const { title, source, description, image } =
 					cache?.frontmatter || {};
 
-				// _source will give us the content of the code block if we want it for some reason
+				const metadata: MetaData["metadata"] = {
+					title,
+					website: source,
+					description,
+					banner: image,
+					themeColor: "",
+				};
+
+				const handleDelete = async () => {
+					if (
+						window.confirm(
+							"Are you sure you want to remove this bookmark?"
+						)
+					) {
+						await removeBookmarkFromFilePath({
+							plugin: this,
+							file,
+						});
+					}
+				};
+
+				const handleAddTag = async () => {
+					new TopicTagModal(this, file.basename, metadata).open();
+					// open a dialog with the ability to to add a link to the current bookmark to any of the topic files
+				};
+				const backlinks = (
+					this.app.metadataCache as any
+				).getBacklinksForFile(file).data;
+
+				const backlinksArray = Object.keys(backlinks);
+
+				const filtered = backlinksArray
+					.filter((link) => {
+						return link.includes(this.settings.devTopicFolderPath);
+					})
+					.map((link) => {
+						return link
+							.split(this.settings.devTopicFolderPath)?.[1]
+							?.replace("/", "")
+							?.replace(".md", "");
+					});
+
+				const handleRemoveTag = async (tag: string) => {
+					let devTopicFileName = `🏷️ ${sanitizeFileName(tag)}`;
+					const devTopicPath = `${this.settings.devTopicFolderPath}/${devTopicFileName}.md`;
+
+					let devTopicFile = app.vault.getAbstractFileByPath(
+						devTopicPath
+					) as TFile;
+
+					const toReplace = `![[${file.basename}]]`;
+
+					await this.app.vault
+						.read(devTopicFile)
+						.then((currentContent) => {
+							this.app.vault.modify(
+								devTopicFile,
+								currentContent.replace(toReplace, "")
+							);
+						});
+				};
 
 				const root: Root = createRoot(el);
 				root.render(
 					<StrictMode>
 						<ZettelMark
+							isEmbedded={isEmbedded}
+							handleRemoveTag={handleRemoveTag}
+							onDelete={isEmbedded ? handleDelete : undefined}
+							contain={fit ? true : false}
 							title={title}
 							source={source}
 							description={description}
 							image={image}
-							tags={tags}
+							tags={isEmbedded ? filtered : undefined}
+							onAddTag={isEmbedded ? handleAddTag : undefined}
 						/>
 					</StrictMode>
 				);
@@ -193,6 +195,7 @@ export default class ZettelBloom extends Plugin {
 		// // If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// // Using this function will automatically remove the event listener when this plugin is disabled.
 		// this.registerDomEvent(document, "click", (evt: MouseEvent) => {
+
 		// 	console.log("click", evt);
 		// });
 
@@ -215,18 +218,37 @@ export default class ZettelBloom extends Plugin {
 			let folderPath = this.settings.resourceFolderPath;
 			let folder = await this.app.vault.getAbstractFileByPath(folderPath);
 
-			// const tags = getTopicTagSet({
-			// 	files: this.app.vault.getMarkdownFiles(),
-			// 	resourceFolderPath: folderPath,
-			// });
+			// seed cache....
+			// const files = this.app.vault.getMarkdownFiles();
 
-			// const setAsString = JSON.stringify(Array.from(tags));
-			// console.log(
-			// 	"🚀 ~ ZettelBloom ~ this.app.workspace.onLayoutReady ~ setAsString:",
-			// 	setAsString
-			// );
+			// const sourceLinks = files.reduce((acc, file) => {
+			// 	if (file.path.startsWith(this.settings.resourceFolderPath)) {
+			// 		const cache = app.metadataCache.getFileCache(file);
+			// 		const url = cache?.frontmatter?.source; // assumes we are using the "topicTags" frontmatter for tags
+			// 		if (url) {
+			// 			acc.push(url);
+			// 		}
+			// 	}
+			// 	return acc;
+			// }, [] as string[]);
 
-			// Remove the unnecessary console.log statement
+			// const cacheObject = sourceLinks.reduce((acc, link) => {
+			// 	const newLink = cleanPermalink(link);
+			// 	if (newLink) {
+			// 		acc[newLink] = new Date();
+			// 	}
+			// 	return acc;
+			// }, {} as Record<string, Date>);
+
+			// const newCacheObject = {
+			// 	...cacheObject,
+			// 	...this.settings.resourceUrlCache,
+			// };
+
+			// this.settings.resourceUrlCache = newCacheObject;
+			// await this.saveSettings();
+
+			// seed cache end....
 
 			if (!folder) {
 				new Notice(`Invalid Folder Path`);
@@ -244,6 +266,28 @@ export default class ZettelBloom extends Plugin {
 	}
 
 	onunload() {}
+
+	async activateView() {
+		const { workspace } = this.app;
+
+		let leaf: WorkspaceLeaf | null = null;
+		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
+
+		if (leaves.length > 0) {
+			// A leaf with our view already exists, use that
+			leaf = leaves[0];
+		} else {
+			// Our view could not be found in the workspace, create a new leaf
+			// in the right sidebar for it
+			leaf = workspace.getRightLeaf(false);
+			await leaf?.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+		}
+
+		// "Reveal" the leaf in case it is in a collapsed sidebar
+		if (leaf) {
+			workspace.revealLeaf(leaf);
+		}
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign(
@@ -270,7 +314,7 @@ export default class ZettelBloom extends Plugin {
 		if (minutesToSync > 0) {
 			this.timeoutIDAutoSync = window.setTimeout(() => {
 				new Notice(`✅ SYNCING...`);
-				sync({ settings: this.settings, app: this.app });
+				sync({ settings: this.settings, app: this.app, plugin: this });
 				this.startAutoSync();
 			}, minutesToSync * 60000);
 		}
@@ -445,22 +489,6 @@ class SettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.autoSyncInterval)
 					.onChange(async (value) => {
 						this.plugin.settings.autoSyncInterval = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Raindrop Duplicate Prevention")
-			.setDesc(
-				"Prevents duplicate link resources from being created when iCloud Sync is lagging behind raindrop syncing, This is achieved by checking against an additional external data store. Metadata from the bookmark, and the collectionID is stored externally. See further details in the readme"
-			)
-			.setDisabled(!this.plugin.settings.raindropSync)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.duplicatePrevention)
-					.setDisabled(!this.plugin.settings.raindropSync)
-					.onChange(async (value) => {
-						this.plugin.settings.duplicatePrevention = value;
 						await this.plugin.saveSettings();
 					})
 			);

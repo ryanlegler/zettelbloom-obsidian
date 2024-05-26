@@ -11,7 +11,11 @@ export type ZettelBloomSettings = {
 	resourceEmojiPrefix: string;
 	devTopicFolderPath: string;
 	devTopicUpLinkPath: string;
-	duplicatePrevention: boolean;
+	resourceUrlCache: ResourceUrlCache;
+};
+
+export type ResourceUrlCache = {
+	[key: string]: Date;
 };
 
 export type RainDropMeta = {

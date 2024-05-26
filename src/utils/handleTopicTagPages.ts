@@ -15,32 +15,36 @@ export async function handleTopicTagPages({
 	settings: ZettelBloomSettings;
 	devTopicFilePaths?: string[];
 }) {
-	console.log("🚀 ~ devTopicFilePaths:", devTopicFilePaths);
+	// the tags are the topic tags per file
 	for (const tag of tags) {
 		let devTopicFileName = `🏷️ ${sanitizeFileName(tag)}`;
-
 		const devTopicPath = `${settings.devTopicFolderPath}/${devTopicFileName}.md`;
+
+		// this is the path that the dev topic file should have bas on the topic tag for each tag in each file
 
 		// const isMatch = devTopicFilePaths?.find(
 		// 	(path) => path?.toLowerCase() === devTopicPath.toLowerCase()
 		// );
 
-		// check if the dev topic file already exists
+		// if (isMatch) {
+		// 	console.log("🚀 ~ isMatch:", isMatch);
+		// } else {
+		// 	new Notice(`🚫 devTopicFile for path "${devTopicPath}" Not found`);
+		// }
+
+		// get the File object for the dev topic file path
 		let devTopicFile = app.vault.getAbstractFileByPath(
 			devTopicPath
 		) as TFile;
 
-		// create the dev topic file if it doesn't exist//
-		// is there a better way to check if a file exists? one thats case insenstitive?
-
-		// if (!devTopicFile && !isMatch) {
+		// create the dev topic file if it doesn't exist
 		if (!devTopicFile) {
-			console.log("🚀 ~ devTopicPath:", devTopicPath);
-			new Notice(`🚫 devTopicFile for path "${devTopicPath}" Not found`);
-			new Notice(`✅ New Dev Topic File: "${devTopicFileName}" Created`);
-			// TODO - maybe the uplink should be optional
-			const content = `\nup: [[${settings.devTopicUpLinkPath}]]\n\n![[${newFileName}]]\n\n`;
-			await app.vault.create(devTopicPath, content);
+			// console.log("🚀 ~ devTopicPath:", devTopicPath);
+			// new Notice(`🚫 devTopicFile for path "${devTopicPath}" Not found`);
+			// new Notice(`✅ New Dev Topic File: "${devTopicFileName}" Created`);
+			// // TODO - maybe the uplink should be optional
+			// const content = `\nup: [[${settings.devTopicUpLinkPath}]]\n\n![[${newFileName}]]\n\n`;
+			// await app.vault.create(devTopicPath, content);
 		} else {
 			// add the link to the dev topic file
 

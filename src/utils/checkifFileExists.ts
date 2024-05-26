@@ -3,7 +3,7 @@ import { ZettelBloomSettings } from "types";
 import { sanitizeFileName } from "./sanitizeFileName";
 import { sanitizeUrl } from "./sanitizeUrl";
 
-export function checkIfFileExists({
+export async function checkIfFileExists({
 	settings,
 	title,
 	website,
