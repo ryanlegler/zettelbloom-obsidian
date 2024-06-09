@@ -115,14 +115,6 @@
 /* overrides */
 /* overrides */
 
-/* mobile */
-@media screen and (max-width: 768px) {
-	.rich-link-card .rich-link-image-container {
-		min-width: 100px;
-		min-height: 100px;
-	}
-}
-
 .markdown-embed:has(.rich-link-card-container)
 	+ .markdown-embed:has(.rich-link-card-container) {
 	margin-top: 0.6em !important;
@@ -262,3 +254,11 @@
     min-width: 70px;
     aspect-ratio: 1 / 1;
 } */
+
+/* mobile */
+@media (max-width: 768px) {
+	.rich-link-card .rich-link-image-container {
+		min-width: 110px;
+		min-height: 100px;
+	}
+}

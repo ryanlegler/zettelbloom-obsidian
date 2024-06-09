@@ -1,22 +1,20 @@
-import { App } from "obsidian";
-import { ZettelBloomSettings } from "types";
+import { Bookmark } from "types";
 import { sanitizeFileName } from "./sanitizeFileName";
 import { sanitizeUrl } from "./sanitizeUrl";
+import ZettelBloom from "main";
 
 export async function checkIfFileExists({
-	settings,
-	title,
-	website,
-	app,
+	bookmark,
+	plugin,
 }: {
-	settings: ZettelBloomSettings;
-	website: string;
-	title: string;
-	app: App;
+	bookmark: Bookmark;
+	plugin: ZettelBloom;
 }) {
+	const { settings, app } = plugin;
+	const { title, source } = bookmark || {};
 	// the new file name
-	let newFileName = `${settings.resourceEmojiPrefix} ${
-		sanitizeFileName(title) || sanitizeUrl(website)
+	const newFileName = `${settings.resourceEmojiPrefix} ${
+		sanitizeFileName(title) || sanitizeUrl(source)
 	}`;
 
 	const { resourceFolderPath } = settings || {};

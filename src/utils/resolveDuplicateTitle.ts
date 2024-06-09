@@ -1,3 +1,3 @@
-import { MetaData } from "types";
+import { Bookmark } from "types";
 
-export function resolveDuplicateTitle(metadata: MetaData["metadata"]) {}
+export function resolveDuplicateTitle(bookamrk: Bookmark) {}

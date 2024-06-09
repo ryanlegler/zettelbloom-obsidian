@@ -1,6 +1,6 @@
 import ZettelBloom from "main";
 import { App, Notice, TFile } from "obsidian";
-import { removeBookmarkFromFilePath } from "src/utils/removeBookmarkfromFilePath";
+import { removeBookmarkFromFilePath } from "src/utils/removeBookmarkFromFilePath";
 
 export async function purgeBookmark(plugin: ZettelBloom) {
 	const { app } = plugin;

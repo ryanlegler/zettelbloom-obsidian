@@ -1,5 +1,5 @@
 import { App, Notice, TFile } from "obsidian";
-import { MetaData, ZettelBloomSettings } from "types";
+import { Bookmark, ZettelBloomSettings } from "types";
 import { getRichLinkTemplate } from "./getRichLinkTemplate";
 import { handleTopicTagPages } from "./handleTopicTagPages";
 import { extractUrlFromMarkdown } from "./extractUrlFromMarkdown";
@@ -7,20 +7,22 @@ import { checkIfFileExists } from "./checkifFileExists";
 import { getIsValidUrl } from "./getIsValidUrl";
 import { backSync } from "./backSync";
 import { checkIfLinkExistsInCache } from "./checkifLinkExistsInCache";
+import ZettelBloom from "main";
+import { getResolvedFileName } from "./getResolvedFileName";
 
+// TODO - this isn't actually used anymore - get rid of it?
 export async function createInPlace({
-	settings,
-	app,
+	plugin,
 	tags = [],
-	metadata,
+	bookmark,
 	propagate = true,
 }: {
-	settings: ZettelBloomSettings;
-	app: App;
+	plugin: ZettelBloom;
 	tags: string[];
-	metadata: MetaData["metadata"];
+	bookmark: Bookmark;
 	propagate?: boolean;
 }) {
+	const { settings, app } = plugin;
 	const selection = app.workspace.activeEditor?.editor?.getSelection();
 	const url = extractUrlFromMarkdown(selection);
 
@@ -30,27 +32,26 @@ export async function createInPlace({
 		return;
 	}
 
-	const { title, website } = metadata || {};
+	const { title, source } = bookmark || {};
 
 	const linkAlreadySaved = checkIfLinkExistsInCache({
-		link: metadata.website,
+		link: source,
 		resourceUrlCache: settings.resourceUrlCache,
 	});
 
-	const { fileExists, newFileName, filePath } = await checkIfFileExists({
-		app,
-		settings,
-		title: title,
-		website: website,
+	// we use the getResolvedFileName when we want to be sure we are returning a file path that is unique
+	const { fileName, filePath } = await getResolvedFileName({
+		plugin,
+		bookmark,
 	});
 
 	// this should now never happen because we are checking if the file exists before calling this function.
 	// just incase we missed something, we will check again
-	if (fileExists || linkAlreadySaved) {
-		new Notice(`🚨 File Already Exists: "${newFileName}"`);
+	if (linkAlreadySaved) {
+		new Notice(`🚨 File Already Exists: "${fileName}"`);
 		// put the link in the current selection in the editor
 		app.workspace.activeEditor?.editor?.replaceSelection(
-			`![[${newFileName}]]`
+			`![[${fileName}]]`
 		);
 
 		return;
@@ -64,19 +65,14 @@ export async function createInPlace({
 			await backSync({
 				url,
 				settings,
-				metadata,
 			});
 		}
 
 		// creates the new file
-		const content = getRichLinkTemplate({
-			metadata,
-			tags,
-			hashtag: "",
-		});
-
+		const content = getRichLinkTemplate(bookmark);
 		await app.vault.create(filePath, content);
-		new Notice(`✅ ${newFileName} - New File Created`);
+
+		new Notice(`✅ ${fileName} - New File Created`);
 
 		if (propagate) {
 			// if we have tags
@@ -84,20 +80,22 @@ export async function createInPlace({
 				await handleTopicTagPages({
 					settings,
 					tags, // tags from the metadata
-					newFileName, // the name of the bookmark file
+					fileName, // the name of the bookmark file
 					app,
 				});
 			} else {
-				// if we don't have tags, add the link to the Inbox
-				let inboxFile: TFile = app.vault.getAbstractFileByPath(
+				const inboxFile = app.vault.getAbstractFileByPath(
 					settings.resourceInboxFilePath
 				) as TFile;
-
-				if (inboxFile) {
+				const file = app.workspace.getActiveFile();
+				const inboxIsActive = inboxFile.path === file?.path;
+				// if we don't have tags, add the link to the Inbox
+				// don't add it to the inbox is the file is the inbox
+				if (inboxFile && !inboxIsActive) {
 					app.vault.read(inboxFile).then((currentContent) => {
 						app.vault.modify(
 							inboxFile,
-							currentContent + `![[${newFileName}]] \n \n`
+							currentContent + `![[${fileName}]] \n \n`
 						);
 					});
 				}
@@ -106,7 +104,7 @@ export async function createInPlace({
 
 		// now put the link in the current selection in the editor
 		app.workspace.activeEditor?.editor?.replaceSelection(
-			`![[${newFileName}]]`
+			`![[${fileName}]]`
 		);
 	}
 }

@@ -11,6 +11,5 @@ export function checkIfLinkExistsInCache({
 	// Check if the link already exists in the cache
 	const newLink = cleanPermalink(link);
 	const linkAlreadySaved = newLink && resourceUrlCache?.[newLink];
-
 	return linkAlreadySaved;
 }

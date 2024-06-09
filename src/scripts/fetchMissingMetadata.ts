@@ -1,33 +1,29 @@
 import { App, Notice, TFile } from "obsidian";
-import { getMetaData } from "src/utils/getMetaData";
+
 import { getRichLinkTemplate } from "src/utils/getRichLinkTemplate";
-import { MetaData } from "types";
+import { Bookmark } from "types";
 import ZettelBloom from "main";
-export async function fetchMissingMetadata({
-	app,
-	plugin,
-}: {
-	app: App;
-	plugin: ZettelBloom;
-}) {
+import { getBookmarkFromUrl } from "src/dataLayer/getBookmarkFromUrl";
+
+// Looks for files in the resource folder path that are missing metadata and fetches the re-fetches the metadata and writes back to the file
+export async function fetchMissingMetadata(plugin: ZettelBloom) {
 	const { settings, app } = plugin;
 	const markdownFiles = app.vault.getMarkdownFiles();
 	for (const file of markdownFiles) {
 		const cache = app.metadataCache.getFileCache(file as TFile);
-		const { title, source, topicTags } = cache?.frontmatter || {};
+		const { title, source, description } = cache?.frontmatter || {};
 		if (
 			file.path.startsWith(settings.resourceFolderPath) &&
 			source &&
-			!title
+			(!title || !description)
 		) {
-			const metadata: MetaData["metadata"] = await getMetaData(source);
+			const bookmark: Bookmark = await getBookmarkFromUrl(source);
 			app.vault
 				.read(file)
 				.then(() => {
 					new Notice(`✅ ${source} - UPDATED`);
 					const contents = getRichLinkTemplate({
-						metadata,
-						tags: topicTags, // use AI for tag generation?
+						bookmark,
 					});
 
 					app.vault

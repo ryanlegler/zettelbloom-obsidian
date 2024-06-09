@@ -5,7 +5,6 @@ export type ZettelBloomSettings = {
 	autoSyncInterval: string; // minutes
 	raindropCollectionID: string;
 	raindropBackSync: boolean;
-
 	resourceFolderPath: string;
 	resourceInboxFilePath: string;
 	resourceEmojiPrefix: string;
@@ -69,15 +68,10 @@ export type Item = {
 	collectionId: number;
 };
 
-// TODO - refactor all this metadata stuff
-export type MetaData = {
-	metadata: {
-		website: string;
-		title: string;
-		description: string | undefined;
-		banner: string | undefined;
-		themeColor: string | undefined;
-	};
-	socials: Record<string, string | undefined>;
-	favicons: string[];
+export type Bookmark = {
+	title: string;
+	source: string;
+	description?: string;
+	image?: string;
+	tags?: string[];
 };

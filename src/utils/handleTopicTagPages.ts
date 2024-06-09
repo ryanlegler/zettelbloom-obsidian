@@ -4,38 +4,28 @@ import { ZettelBloomSettings } from "types";
 
 export async function handleTopicTagPages({
 	tags,
-	newFileName,
+	fileName,
 	app,
 	settings,
 	devTopicFilePaths,
 }: {
 	tags: string[];
-	newFileName: string;
+	fileName: string;
 	app: App;
 	settings: ZettelBloomSettings;
 	devTopicFilePaths?: string[];
 }) {
 	// the tags are the topic tags per file
 	for (const tag of tags) {
-		let devTopicFileName = `🏷️ ${sanitizeFileName(tag)}`;
+		const devTopicFileName = `🏷️ ${sanitizeFileName(tag)}`;
 		const devTopicPath = `${settings.devTopicFolderPath}/${devTopicFileName}.md`;
 
-		// this is the path that the dev topic file should have bas on the topic tag for each tag in each file
-
-		// const isMatch = devTopicFilePaths?.find(
-		// 	(path) => path?.toLowerCase() === devTopicPath.toLowerCase()
-		// );
-
-		// if (isMatch) {
-		// 	console.log("🚀 ~ isMatch:", isMatch);
-		// } else {
-		// 	new Notice(`🚫 devTopicFile for path "${devTopicPath}" Not found`);
-		// }
-
 		// get the File object for the dev topic file path
-		let devTopicFile = app.vault.getAbstractFileByPath(
+		const devTopicFile = app.vault.getAbstractFileByPath(
 			devTopicPath
 		) as TFile;
+
+		console.log("🚀 ~ devTopicFile:", devTopicFile);
 
 		// create the dev topic file if it doesn't exist
 		if (!devTopicFile) {
@@ -49,21 +39,29 @@ export async function handleTopicTagPages({
 			// add the link to the dev topic file
 
 			await app.vault.read(devTopicFile).then((currentContent) => {
+				console.log(
+					"🚀 ~ awaitapp.vault.read ~ currentContent:",
+					currentContent
+				);
+
+				const alreadyIncluded = currentContent.includes(
+					`![[${fileName}]]`
+				);
 				// Add a link to the Bookmark at each link selection if it doesn't already exist
-				if (!currentContent.includes(`![[${newFileName}]]`)) {
+				if (!alreadyIncluded) {
 					new Notice(
 						`✅ Dev Topic File: "${devTopicFileName}" Updated`
 					);
 					app.vault.modify(
 						devTopicFile,
-						currentContent + `![[${newFileName}]] \n \n`
+						currentContent + `![[${fileName}]] \n \n`
 					);
 
 					// we should also remove the propagate link from the bookmark file
 				} else {
-					// new Notice(
-					// 	`🚫 Dev Topic File: "${devTopicFileName}" Already Contains Link`
-					// );
+					new Notice(
+						`🚫 Dev Topic File: "${devTopicFileName}" Already Contains Link`
+					);
 				}
 			});
 		}

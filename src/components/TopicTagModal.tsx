@@ -1,27 +1,43 @@
-import { App, Modal } from "obsidian";
+import { App, Modal, TFile } from "obsidian";
 import { Root, createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 
 import ZettelBloom from "main";
 import { TopicTagPicker } from "./TopicTagPicker";
 import { handleTopicTagPages } from "src/utils/handleTopicTagPages";
-import { MetaData } from "types";
+import { Bookmark } from "types";
+import { getTopicTagMatch } from "src/dataLayer/getTopicTagMatch";
+import { getTagList } from "src/utils/getTagList";
+
+type TopicTagModalProps = {
+	plugin: ZettelBloom;
+	fileName: string;
+	bookmark: Bookmark;
+	onChoose?: (tags: string[]) => void;
+	tags: string[];
+};
 
 export class TopicTagModal extends Modal {
 	root: Root | null = null;
 	plugin: ZettelBloom;
-	newFileName: string;
-	metadata: MetaData["metadata"];
+	fileName: string;
+	bookmark: Bookmark;
+	onChoose?: (tags: string[]) => void;
+	tags;
 
-	constructor(
-		plugin: ZettelBloom,
-		newFileName: string,
-		metadata: MetaData["metadata"]
-	) {
+	constructor({
+		plugin,
+		fileName,
+		bookmark,
+		onChoose,
+		tags,
+	}: TopicTagModalProps) {
 		super(plugin.app);
 		this.plugin = plugin;
-		this.newFileName = newFileName;
-		this.metadata = metadata;
+		this.fileName = fileName;
+		this.bookmark = bookmark;
+		this.onChoose = onChoose;
+		this.tags = tags;
 	}
 
 	onClose() {
@@ -29,52 +45,42 @@ export class TopicTagModal extends Modal {
 	}
 
 	async onOpen() {
-		const markdownFiles = this.plugin.app.vault.getMarkdownFiles();
-
-		const tagList = markdownFiles
-			.filter((file) => {
-				return file.path.startsWith(
-					this.plugin.settings.devTopicFolderPath
-				);
-			})
-			.map((file) => {
-				return file.basename;
-			});
-		console.log("🚀 ~ TopicTagModal ~ onOpen ~ tagList:", tagList);
+		// will include the tag emoji at this point
+		const tagList = getTagList(this.plugin);
 
 		const handleConfirm = async (tags: string[]) => {
+			// adds a bookmark to the topic tag pages
+
 			await handleTopicTagPages({
 				settings: this.plugin.settings,
 				tags: tags.map((tag) => tag.replace("🏷️ ", "")),
-				newFileName: this.newFileName,
+				fileName: this.fileName,
 				app: this.plugin.app,
 			});
+
+			// remove the link from the inbox
+			let inboxFile = this.plugin.app.vault.getAbstractFileByPath(
+				this.plugin.settings.resourceInboxFilePath
+			) as TFile;
+
+			this.plugin.app.vault.read(inboxFile).then((currentContent) => {
+				this.plugin.app.vault.modify(
+					inboxFile,
+					currentContent.replace(`![[${this.fileName}]]`, "")
+				);
+			});
+
+			this.onChoose?.(tags);
 			this.close();
 		};
-
-		const response = await fetch(
-			`https://zettelbloom-api.vercel.app/api/getTopicTagMatch`,
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					metadata: this.metadata,
-					tagList: tagList.map((tag) => tag.replace("🏷️ ", "")),
-				}),
-			}
-		);
-
-		const suggested = await response.json();
-		console.log("🚀 ~ TopicTagModal ~ onOpen ~ suggested:", suggested);
 
 		this.root = createRoot(this.contentEl);
 		this.root.render(
 			<StrictMode>
 				<TopicTagPicker
+					tags={this.tags}
 					tagList={tagList}
-					suggested={suggested}
+					bookmark={this.bookmark}
 					onConfirm={handleConfirm}
 				/>
 			</StrictMode>

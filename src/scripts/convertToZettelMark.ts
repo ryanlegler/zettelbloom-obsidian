@@ -1,15 +1,11 @@
+// DEPRECATE
+
 import ZettelBloom from "main";
 import { App, Notice, TFile, stringifyYaml, parseYaml } from "obsidian";
 import { ZETTEL_MARK_SHORT_CODE } from "src/constants";
-import { MetaData, ZettelBloomSettings } from "types";
 
-export async function convertToZettelMark({
-	app,
-	plugin,
-}: {
-	app: App;
-	plugin: ZettelBloom;
-}) {
+export async function convertToZettelMark(plugin: ZettelBloom) {
+	const { settings } = plugin;
 	const markdownFiles = app.vault.getMarkdownFiles();
 
 	for (const file of markdownFiles) {

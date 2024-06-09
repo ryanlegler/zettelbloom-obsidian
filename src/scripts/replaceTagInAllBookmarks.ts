@@ -1,13 +1,8 @@
 import ZettelBloom from "main";
-import { App, TFile } from "obsidian";
-import { TOPIC_TAG } from "src/constants";
-import { ZettelBloomSettings } from "types";
 
 export async function replaceTagInAllBookmarks({
-	app,
 	plugin,
 }: {
-	app: App;
 	plugin: ZettelBloom;
 }) {
 	const { settings, app } = plugin;
@@ -22,7 +17,7 @@ export async function replaceTagInAllBookmarks({
 					app.vault
 						.modify(
 							file,
-							currentContent.replace("#gather", TOPIC_TAG)
+							currentContent.replace("#gather", "OTHER")
 						)
 						.then(() => {
 							console.log(

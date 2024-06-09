@@ -1,47 +1,45 @@
 import { App, Modal } from "obsidian";
-import { MetaData, ZettelBloomSettings } from "types";
+import { Bookmark, ZettelBloomSettings } from "types";
 import { createInPlace } from "src/utils/createInPlace";
 import { Root, createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import { TopicTagPicker } from "./TopicTagPicker";
+import ZettelBloom from "main";
 
 type ChooseTopicModalProps = {
-	app: App;
-	settings: ZettelBloomSettings;
-	metadata: MetaData["metadata"];
+	plugin: ZettelBloom;
+	bookmark: Bookmark;
 	tagList: string[];
 	suggested: string[];
 };
 
 export class ChooseTopicModal extends Modal {
 	selectedOptions: Set<any>;
-	settings: ZettelBloomSettings;
+	plugin: ZettelBloom;
 	root: Root | null = null;
-	metadata: MetaData["metadata"];
+	bookmark: Bookmark;
 	tagList: string[];
 	suggested: string[];
 
 	constructor({
-		app,
-		settings,
-		metadata,
+		plugin,
+		bookmark,
 		tagList,
 		suggested,
 	}: ChooseTopicModalProps) {
-		super(app);
+		super(plugin.app);
 		this.selectedOptions = new Set(); // stores the selected options
-		this.settings = settings;
-		this.metadata = metadata;
+		this.plugin = plugin;
+		this.bookmark = bookmark;
 		this.suggested = suggested;
 		this.tagList = tagList;
 	}
 
 	onConfirm = (tags: string[]) => {
 		createInPlace({
-			settings: this.settings,
-			app: this.app,
+			plugin: this.plugin,
 			tags,
-			metadata: this.metadata,
+			bookmark: this.bookmark,
 		});
 		this.contentEl.empty();
 		this.close();
@@ -52,8 +50,9 @@ export class ChooseTopicModal extends Modal {
 		this.root.render(
 			<StrictMode>
 				<TopicTagPicker
+					tags={[]}
 					tagList={this.tagList}
-					suggested={this.suggested}
+					bookmark={this.bookmark}
 					onConfirm={this.onConfirm}
 				/>
 			</StrictMode>
